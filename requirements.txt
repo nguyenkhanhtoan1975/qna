@@ -3,4 +3,5 @@ langchain-community
 chromadb
 sentence-transformers
 jq
+pysqlite3-binary
 streamlit

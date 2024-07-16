@@ -6,7 +6,7 @@ from langchain_community.document_loaders import JSONLoader
 from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from langchain_community.vectorstores import Chroma
 import streamlit as st
-import json
+
 
 embedding_function = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
 
@@ -15,7 +15,10 @@ db = Chroma(persist_directory="db", embedding_function=embedding_function)
 
 def query(msg):
     docs = db.similarity_search(msg)
-    return docs[0].page_content, docs[0].metadata
+    q = docs[0].page_content
+    a = docs[0].metadata
+    a = zip(a["Step"].split('|'), a["Answer"].replace('\n', '  \n').split('|'), a["Data"].split('|'), a["Tool"].split('|'))
+    return q, a
 
 def main():
     st.set_page_config(page_title="QnA Nghiệp vụ di động", layout="centered")
@@ -25,16 +28,17 @@ def main():
     
     if msg_input:
         if submit_btn:
-            result = query(msg=msg_input)
-            st.text_area(label="Q", value=result[0], height=100)
-            st.text_area(label="A", value=result[1], height=300)
-
+            with st.spinner("Searching..."):
+                q, a = query(msg=msg_input)     
             
+            st.write("Câu hỏi thường gặp:  \n" + q)
+            for item in a:
+                with st.expander(item[0]):
+                    st.write("Mẫu câu trả lời:  \n" + item[1])
+                    st.write("Dữ liệu:  \n" + item[2])
+                    st.write("Công cụ:  \n" + item[3])
+                    
+            st.success("Done..........")
 
 if __name__ == "__main__":
     main()
-#msg = "nạp tiền ví"
-#print(str(msg.encode('utf-8')))
-
-#obj = query(msg=msg)
-#print(obj[0])
